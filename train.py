@@ -279,6 +279,17 @@ def gbdt_lr_predict(data, category_feature, continuous_feature, test_ids):
         data.drop([col], axis=1, inplace=True)
         data = pd.concat([data, onehot_feats], axis=1)
 
+    # ========== 🆕 Step 1.5: 应用智能特征工程建议 ==========
+    # 手动添加多项式特征（根据之前建议）
+    #data['I11_pow3'] = data['I11'] ** 3
+    #pd.cut(data['I5'], bins=[-np.inf, 140.0, 1020.0, 2960.0, 14410.0, np.inf])
+    #pd.cut(data['I11'], bins=[-np.inf, 0.0, 1.0, 3.0, np.inf])
+    #pd.cut(data['I3'], bins=[-np.inf, 1.0, 3.0, 7.0, 20.0, np.inf])
+    #pd.cut(data['I8'], bins=[-np.inf, 2.0, 7.0, 15.0, 27.0, np.inf])
+    #pd.cut(data['I4'], bins=[-np.inf, 1.0, 7.0, 14.0, np.inf])
+    #pd.cut(data['I2'], bins=[-np.inf, 0, 60, np.inf])
+
+
     train = data[data['Label'] != -1].copy()
     target = train.pop('Label')
     test = data[data['Label'] == -1].copy()
@@ -316,6 +327,10 @@ def gbdt_lr_predict(data, category_feature, continuous_feature, test_ids):
         ]
     )
 
+    # ========== 🆕 获取实际训练的树数量（关键修复！） ==========
+    actual_n_estimators = model.best_iteration_
+    print(f"✅ 实际训练树数量: {actual_n_estimators} (原计划: {n_estimators})")
+
     # ========== Step 2.5: 输出 GBDT 特征重要性 ==========
     feat_imp = pd.DataFrame({
         '特征名': x_train.columns,
@@ -336,36 +351,10 @@ def gbdt_lr_predict(data, category_feature, continuous_feature, test_ids):
     print("\n✅ GBDT 叶子节点索引 shape:", gbdt_feats_train.shape)
     print("✅ 前5个样本叶子索引:\n", gbdt_feats_train[:5])
 
-    # ========== Step 3.5: 示例样本叶子路径 + 规则解析 ==========
-    print("\n" + "="*70)
-    print("🔍 解析叶子节点示例：gbdt_leaf_5_22")
-    print("="*70)
-    
-    try:
-        # 生成类别前缀列表（用于识别 one-hot 列）
-        category_prefixes = [col + "_" for col in category_feature]
-        
-        # 解析第5棵树、第22号叶子
-        leaf_rule = get_leaf_path_enhanced(
-            model.booster_, 
-            tree_index=5, 
-            leaf_index=22, 
-            feature_names=x_train.columns.tolist(),
-            category_prefixes=category_prefixes
-        )
-        
-        if leaf_rule:
-            print(f"✅ 叶子节点 gbdt_leaf_5_22 的决策路径：")
-            for i, rule in enumerate(leaf_rule, 1):
-                print(f"   {i}. {rule}")
-        else:
-            print("⚠️ 未找到该叶子节点路径（可能索引越界或树结构变化）")
-            
-    except Exception as e:
-        print("⚠️ 解析失败:", e)
-
     # ========== Step 4: 对叶子节点做 One-Hot 编码 ==========
-    gbdt_feats_name = ['gbdt_leaf_' + str(i) for i in range(n_estimators)]
+    # 🆕 使用 actual_n_estimators 替代硬编码 n_estimators
+    gbdt_feats_name = ['gbdt_leaf_' + str(i) for i in range(actual_n_estimators)]
+
     df_train_gbdt_feats = pd.DataFrame(gbdt_feats_train, columns=gbdt_feats_name)
     df_test_gbdt_feats = pd.DataFrame(gbdt_feats_test, columns=gbdt_feats_name)
 
@@ -609,6 +598,8 @@ def gbdt_lr_predict(data, category_feature, continuous_feature, test_ids):
     # ========== Step 8: 保存模型和必要信息用于 API ==========
     joblib.dump(model, 'output/gbdt_model.pkl')
     joblib.dump(lr, 'output/lr_model.pkl')
+    # 🆕 保存实际树数量
+    pd.Series([actual_n_estimators]).to_csv('output/actual_n_estimators.csv', index=False, header=['n_estimators'])
     pd.Series(x_train.columns).to_csv('output/train_feature_names.csv', index=False, header=['特征名'], encoding='utf-8-sig')
     pd.Series(category_feature).to_csv('output/category_features.csv', index=False, header=['特征名'], encoding='utf-8-sig')
     pd.Series(continuous_feature).to_csv('output/continuous_features.csv', index=False, header=['特征名'], encoding='utf-8-sig')
