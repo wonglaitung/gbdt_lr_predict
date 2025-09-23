@@ -95,7 +95,7 @@ region,category
 
 ---
 
-## ✅ 第二部分：Flask API 服务 (`app.py`) —— 待你实现
+## ✅ 第二部分：Flask API 服务 (`app.py`)
 
 > ⚠️ 你当前代码中尚未包含 `app.py`，但 README 中描述了其接口。  
 > 以下接口描述供你后续开发参考：
