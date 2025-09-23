@@ -1,0 +1,19 @@
+﻿feature,transform,params,reason,code_snippet,plot
+I5,binning,"{'bins': [-inf, 170.0, 1660.0, 9020.0, inf], 'labels': ['bin_0', 'bin_1', 'bin_2', 'bin_3']}",检测到显著SHAP跳跃（最大跳跃=0.208 > 平均0.137）,"# 分箱建议
+df['I5_bin'] = pd.cut(df['I5'], bins=[-inf, 170.0, 1660.0, 9020.0, inf], labels=['bin_0', 'bin_1', 'bin_2', 'bin_3'])
+# 在 config/features.csv 中添加: I5_bin,category",shap_dependence_I5.png
+I11,binning,"{'bins': [-inf, 0.0, 1.0, 3.0, inf], 'labels': ['bin_0', 'bin_1', 'bin_2', 'bin_3']}",检测到显著SHAP跳跃（最大跳跃=0.340 > 平均0.134）,"# 分箱建议
+df['I11_bin'] = pd.cut(df['I11'], bins=[-inf, 0.0, 1.0, 3.0, inf], labels=['bin_0', 'bin_1', 'bin_2', 'bin_3'])
+# 在 config/features.csv 中添加: I11_bin,category",shap_dependence_I11.png
+I13,binning,"{'bins': [-inf, -1.0, 3.0, 13.0, inf], 'labels': ['bin_0', 'bin_1', 'bin_2', 'bin_3']}",检测到显著SHAP跳跃（最大跳跃=0.290 > 平均0.124）,"# 分箱建议
+df['I13_bin'] = pd.cut(df['I13'], bins=[-inf, -1.0, 3.0, 13.0, inf], labels=['bin_0', 'bin_1', 'bin_2', 'bin_3'])
+# 在 config/features.csv 中添加: I13_bin,category",shap_dependence_I13.png
+I3,binning,"{'bins': [-inf, 1.0, 5.0, 18.0, inf], 'labels': ['bin_0', 'bin_1', 'bin_2', 'bin_3']}",检测到显著SHAP跳跃（最大跳跃=0.127 > 平均0.071）,"# 分箱建议
+df['I3_bin'] = pd.cut(df['I3'], bins=[-inf, 1.0, 5.0, 18.0, inf], labels=['bin_0', 'bin_1', 'bin_2', 'bin_3'])
+# 在 config/features.csv 中添加: I3_bin,category",shap_dependence_I3.png
+I4,binning,"{'bins': [-inf, -1.0, 3.0, 12.0, inf], 'labels': ['bin_0', 'bin_1', 'bin_2', 'bin_3']}",检测到显著SHAP跳跃（最大跳跃=0.103 > 平均0.057）,"# 分箱建议
+df['I4_bin'] = pd.cut(df['I4'], bins=[-inf, -1.0, 3.0, 12.0, inf], labels=['bin_0', 'bin_1', 'bin_2', 'bin_3'])
+# 在 config/features.csv 中添加: I4_bin,category",shap_dependence_I4.png
+I2,binning,"{'bins': [-inf, 0, 0, 40, inf], 'labels': ['bin_0', 'bin_1', 'bin_2', 'bin_3']}",检测到显著SHAP跳跃（最大跳跃=0.089 > 平均0.045）,"# 分箱建议
+df['I2_bin'] = pd.cut(df['I2'], bins=[-inf, 0, 0, 40, inf], labels=['bin_0', 'bin_1', 'bin_2', 'bin_3'])
+# 在 config/features.csv 中添加: I2_bin,category",shap_dependence_I2.png

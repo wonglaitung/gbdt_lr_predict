@@ -1,0 +1,7 @@
+﻿feature,suggested_bins,reason,plot
+I5,"[140.0, 1020.0, 2960.0, 14410.0]",Significant SHAP jump detected (max=0.237 > avg=0.125),shap_dependence_I5.png
+I11,"[0.0, 1.0, 3.0]",Significant SHAP jump detected (max=0.340 > avg=0.134),shap_dependence_I11.png
+I3,"[1.0, 3.0, 7.0, 20.0]",Significant SHAP jump detected (max=0.147 > avg=0.054),shap_dependence_I3.png
+I8,"[2.0, 7.0, 15.0, 27.0]",Significant SHAP jump detected (max=0.094 > avg=0.057),shap_dependence_I8.png
+I4,"[1.0, 7.0, 14.0]",Significant SHAP jump detected (max=0.092 > avg=0.056),shap_dependence_I4.png
+I2,"[0, 0, 0, 60]",Significant SHAP jump detected (max=0.093 > avg=0.045),shap_dependence_I2.png

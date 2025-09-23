@@ -1,0 +1,14 @@
+﻿特征名,建议类型,代码,理由,对应图表
+I5,分箱,"pd.cut(df['I5'], bins=[-np.inf, 140.0, 1020.0, 2960.0, 14410.0, np.inf])",检测到显著SHAP跳跃（最大跳跃=0.237 > 平均0.125）,shap_dependence_I5.png
+I5,多项式_3次,df['I5_pow3'] = df['I5'] ** 3,检测到非线性模式，3次多项式可提升解释力（R²提升=0.220）,shap_dependence_I5.png
+I11,分箱,"pd.cut(df['I11'], bins=[-np.inf, 0.0, 1.0, 3.0, np.inf])",检测到显著SHAP跳跃（最大跳跃=0.340 > 平均0.134）,shap_dependence_I11.png
+I11,多项式_3次,df['I11_pow3'] = df['I11'] ** 3,检测到非线性模式，3次多项式可提升解释力（R²提升=0.333）,shap_dependence_I11.png
+I13,多项式_3次,df['I13_pow3'] = df['I13'] ** 3,检测到非线性模式，3次多项式可提升解释力（R²提升=0.211）,shap_dependence_I13.png
+I6,多项式_3次,df['I6_pow3'] = df['I6'] ** 3,检测到非线性模式，3次多项式可提升解释力（R²提升=0.389）,shap_dependence_I6.png
+I3,分箱,"pd.cut(df['I3'], bins=[-np.inf, 1.0, 3.0, 7.0, 20.0, np.inf])",检测到显著SHAP跳跃（最大跳跃=0.147 > 平均0.054）,shap_dependence_I3.png
+I3,多项式_3次,df['I3_pow3'] = df['I3'] ** 3,检测到非线性模式，3次多项式可提升解释力（R²提升=0.126）,shap_dependence_I3.png
+I8,分箱,"pd.cut(df['I8'], bins=[-np.inf, 2.0, 7.0, 15.0, 27.0, np.inf])",检测到显著SHAP跳跃（最大跳跃=0.094 > 平均0.057）,shap_dependence_I8.png
+I8,多项式_3次,df['I8_pow3'] = df['I8'] ** 3,检测到非线性模式，3次多项式可提升解释力（R²提升=0.595）,shap_dependence_I8.png
+I4,分箱,"pd.cut(df['I4'], bins=[-np.inf, 1.0, 7.0, 14.0, np.inf])",检测到显著SHAP跳跃（最大跳跃=0.092 > 平均0.056）,shap_dependence_I4.png
+I2,分箱,"pd.cut(df['I2'], bins=[-np.inf, 0, 0, 0, 60, np.inf])",检测到显著SHAP跳跃（最大跳跃=0.093 > 平均0.045）,shap_dependence_I2.png
+I2,多项式_3次,df['I2_pow3'] = df['I2'] ** 3,检测到非线性模式，3次多项式可提升解释力（R²提升=0.051）,shap_dependence_I2.png
