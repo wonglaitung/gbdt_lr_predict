@@ -132,7 +132,8 @@ def gbdt_lr_predict(data, category_feature, continuous_feature, test_ids):
         objective='binary',
         boosting_type='gbdt',
         subsample=0.8,
-        min_child_weight=0.5,
+        min_child_weight=0.1,
+        min_child_samples=10,
         colsample_bytree=0.7,
         num_leaves=num_leaves,
         learning_rate=0.05,
@@ -150,6 +151,10 @@ def gbdt_lr_predict(data, category_feature, continuous_feature, test_ids):
             lgb.early_stopping(stopping_rounds=5, verbose=False)
         ]
     )
+
+    # ========== 🆕 获取实际训练的树数量 ==========
+    actual_n_estimators = model.best_iteration_
+    print(f"✅ 实际训练树数量: {actual_n_estimators} (原计划: {n_estimators})")
 
     # ========== Step 2.5: 输出 GBDT 特征重要性 ==========
     feat_imp = pd.DataFrame({
@@ -200,7 +205,9 @@ def gbdt_lr_predict(data, category_feature, continuous_feature, test_ids):
         print("⚠️ 解析失败:", e)
 
     # ========== Step 4: 对叶子节点做 One-Hot 编码 ==========
-    gbdt_feats_name = ['gbdt_leaf_' + str(i) for i in range(n_estimators)]
+    # 🆕 使用 actual_n_estimators 替代硬编码 n_estimators
+    gbdt_feats_name = ['gbdt_leaf_' + str(i) for i in range(actual_n_estimators)]
+
     df_train_gbdt_feats = pd.DataFrame(gbdt_feats_train, columns=gbdt_feats_name)
     df_test_gbdt_feats = pd.DataFrame(gbdt_feats_test, columns=gbdt_feats_name)
 
@@ -335,19 +342,14 @@ def gbdt_lr_predict(data, category_feature, continuous_feature, test_ids):
     })
 
     # ========== Step 8: 保存模型和必要信息用于 API ==========
-    # 保存 GBDT 模型
     joblib.dump(model, 'output/gbdt_model.pkl')
-    
-    # 保存 LR 模型
     joblib.dump(lr, 'output/lr_model.pkl')
     
-    # 保存训练集特征名（用于API预处理）
+    # 🆕 保存实际树数量，供 API 使用
+    pd.Series([actual_n_estimators]).to_csv('output/actual_n_estimators.csv', index=False, header=['n_estimators'])
+    
     pd.Series(x_train.columns).to_csv('output/train_feature_names.csv', index=False, header=['feature'])
-    
-    # 保存类别特征名（用于API中的one-hot）
     pd.Series(category_feature).to_csv('output/category_features.csv', index=False, header=['feature'])
-    
-    # 保存连续特征名
     pd.Series(continuous_feature).to_csv('output/continuous_features.csv', index=False, header=['feature'])
     
     print("✅ 模型和元数据已保存，可用于 API 服务")
@@ -382,4 +384,4 @@ if __name__ == '__main__':
     print("   - shap_summary_plot.png")
     print("   - shap_waterfall_sample_0.png")
     print("   - submission_gbdt_lr.csv")
-    print("   - 控制台输出叶子节点规则解析")
+    print("   - actual_n_estimators.csv") 

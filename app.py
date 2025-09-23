@@ -7,6 +7,7 @@ import io
 import os
 import uuid
 import tempfile
+import logging
 
 from flask import Flask, request, jsonify, send_file
 from sklearn.linear_model import LogisticRegression
@@ -14,6 +15,10 @@ import matplotlib.pyplot as plt
 import shap
 
 from werkzeug.utils import secure_filename
+
+# ========== 设置日志 ==========
+logging.basicConfig(level=logging.INFO)
+logger = logging.getLogger(__name__)
 
 app = Flask(__name__)
 
@@ -25,7 +30,8 @@ required_files = [
     'lr_model.pkl',
     'train_feature_names.csv',
     'category_features.csv',
-    'continuous_features.csv'
+    'continuous_features.csv',
+    'actual_n_estimators.csv'  # 🆕 新增：确保树数量一致
 ]
 
 for f in required_files:
@@ -38,6 +44,10 @@ lr_model = joblib.load(os.path.join(MODEL_DIR, 'lr_model.pkl'))
 train_feature_names = pd.read_csv(os.path.join(MODEL_DIR, 'train_feature_names.csv'))['feature'].tolist()
 category_features = pd.read_csv(os.path.join(MODEL_DIR, 'category_features.csv'))['feature'].tolist()
 continuous_features = pd.read_csv(os.path.join(MODEL_DIR, 'continuous_features.csv'))['feature'].tolist()
+
+# 🆕 加载实际树数量
+actual_n_estimators = pd.read_csv(os.path.join(MODEL_DIR, 'actual_n_estimators.csv'))['n_estimators'].iloc[0]
+print(f"✅ 实际树数量: {actual_n_estimators}")
 
 category_prefixes = [col + "_" for col in category_features]
 
@@ -168,9 +178,9 @@ def predict_core(sample_df_list, return_explanation=True, generate_plot=False):
     # 合并为大 DataFrame
     batch_df = pd.concat(sample_df_list, ignore_index=True)
 
-    # Step 1: GBDT 叶子索引
+    # Step 1: GBDT 叶子索引 —— 🆕 使用 actual_n_estimators
     leaf_indices_batch = gbdt_model.booster_.predict(batch_df.values, pred_leaf=True)
-    n_trees = leaf_indices_batch.shape[1]
+    n_trees = actual_n_estimators  # ✅ 关键修改：使用训练时保存的实际树数量
 
     # Step 2: 叶子 One-Hot
     leaf_dummies_list = []
@@ -427,8 +437,9 @@ def predict_batch_csv():
         def remove_file():
             try:
                 os.remove(output_path)
+                logger.info(f"✅ 临时文件已删除: {output_path}")
             except Exception as e:
-                print(f"❌ 临时文件删除失败: {e}")
+                logger.error(f"❌ 临时文件删除失败: {e}")
 
         return response
 
@@ -449,6 +460,9 @@ def health():
             "continuous": len(continuous_features),
             "categorical": len(category_features),
             "total_input_features": len(train_feature_names)
+        },
+        "model_info": {
+            "actual_n_estimators": int(actual_n_estimators)  # 🆕 新增
         }
     })
 
