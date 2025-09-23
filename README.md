@@ -87,7 +87,7 @@ region,category
 
 ### 🎯 核心接口 1：单样本预测 `/predict`
 
-**输入**: JSON 格式单样本数据。
+**输入**: JSON 格式单样本数据（匹配 /data 内数据）。
 
 ```json
 {
@@ -178,7 +178,7 @@ region,category
 
 **输入**: 上传 CSV 文件（第一列为 ID，其余为特征）。
 
-**示例 `input.csv`:**
+**示例 `/data/test.csv`:**
 
 ```csv
 Id,I1,I2,I3,I4,I5,I6,I7,I8,I9,I10,I11,I12,I13,C1,C2,C3,C4,C5,C6,C7,C8,C9,C10,C11,C12,C13,C14,C15,C16,C17,C18,C19,C20,C21,C22,C23,C24,C25,C26
@@ -319,7 +319,7 @@ top_3_rules    = income > 100000.0000; device_type == 'iOS'; age > 40.0000
 
 4.  **调用预测**:
 
-    **单样本 (JSON)**:
+    **单样本 (JSON例子)**:
     ```bash
     curl -X POST http://localhost:5000/predict \
          -H "Content-Type: application/json" \
