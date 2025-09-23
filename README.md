@@ -276,14 +276,17 @@ top_3_rules    = income > 100000.0000; device_type == 'iOS'; age > 40.0000
 
 ```json
 {
-  "status": "healthy",
-  "message": "GBDT+LR API is running",
-  "model_loaded": true,
   "features": {
-    "continuous": 3,
-    "categorical": 3,
-    "total_input_features": 15
-  }
+    "categorical": 26,
+    "continuous": 13,
+    "total_input_features": 13104
+  },
+  "message": "GBDT+LR API is running",
+  "model_info": {
+    "actual_n_estimators": 22
+  },
+  "model_loaded": true,
+  "status": "healthy"
 }
 ```
 
