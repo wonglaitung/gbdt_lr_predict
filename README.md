@@ -91,10 +91,45 @@ region,category
 
 ```json
 {
-  "age": 35,
-  "income": 80000,
-  "device_type": "iOS",
-  "region": "North America"
+    "I1": 1.0,
+    "I2": 0,
+    "I3": 1.0,
+    "I4": 227.0,
+    "I5": 1.0,
+    "I6": 173.0,
+    "I7": 18.0,
+    "I8": 50.0,
+    "I9": 1.0,
+    "I10": 7.0,
+    "I11": 1.0,
+    "I12": 0,
+    "I13": 0,
+    "C1": "75ac2fe6",
+    "C2": "1cfdf714",
+    "C3": "713fbe7c",
+    "C4": "aa65a61e",
+    "C5": "25c83c98",
+    "C6": "3bf701e7",
+    "C7": "7195046d",
+    "C8": "a73ee510",
+    "C9": "9e5006cd",
+    "C10": "4d8549da",
+    "C11": "a48afad2",
+    "C12": "51b97b8f",
+    "C13": "b28479f6",
+    "C14": "d345b1a0",
+    "C15": "3fa658c5",
+    "C16": "3486227d",
+    "C17": "e88ffc9d",
+    "C18": "c393dc22",
+    "C19": "b1252a9d",
+    "C20": "57c90cd9",
+    "C21": "",
+    "C22": "bcdee96c",
+    "C23": "4d19a3eb",
+    "C24": "cb079c2d",
+    "C25": "456c12a0",
+    "C26": ""
 }
 ```
 
@@ -102,24 +137,38 @@ region,category
 
 ```json
 {
-  "probability": 0.8743,
-  "explanation": {
-    "important_features": [
-      {"feature": "income", "shap_value": 0.312},
-      {"feature": "device_type_iOS", "shap_value": 0.201},
-      {"feature": "age", "shap_value": 0.089}
-    ],
-    "shap_plot_base64": "image/png;base64,...",
-    "top_rules": [
-      "income > 100000.0000",
-      "device_type == 'iOS'",
-      "age > 40.0000"
-    ],
-    "feature_based_rules": [
-      "income > 100000.0000 (SHAP: +0.3120)",
-      "device_type == 'iOS' (SHAP: +0.2010)"
-    ]
-  }
+    "explanation": {
+        "feature_based_rules": [
+            "I11 > 0.0000 (SHAP: +0.1077)",
+            "I6 > 7.5000 (SHAP: -0.1403)",
+            "C17 != 'e5ba7672' (SHAP: -0.1735)",
+            "I6 > 125.5000 (SHAP: -0.1403)",
+            "I5 <= 3453.0000 (SHAP: +0.2917)"
+        ],
+        "important_features": [
+            {
+                "feature": "I5",
+                "shap_value": 0.2917
+            },
+            {
+                "feature": "C17_e5ba7672",
+                "shap_value": -0.1735
+            },
+            {
+                "feature": "I6",
+                "shap_value": -0.1403
+            }
+        ],
+        "shap_plot_base64": "image/png;base64,iVBO...ggg==",
+        "top_rules": [
+            "I11 > 0.0000",
+            "I6 > 7.5000",
+            "I7 <= 46.0000",
+            "I5 <= 3453.0000",
+            "I13 <= 10.5000"
+        ]
+    },
+    "probability": 0.2666
 }
 ```
 
@@ -132,17 +181,19 @@ region,category
 **示例 `input.csv`:**
 
 ```csv
-user_id,age,income,device_type,region
-U1001,25,50000,Android,Asia
-U1002,45,120000,iOS,North America
+Id,I1,I2,I3,I4,I5,I6,I7,I8,I9,I10,I11,I12,I13,C1,C2,C3,C4,C5,C6,C7,C8,C9,C10,C11,C12,C13,C14,C15,C16,C17,C18,C19,C20,C21,C22,C23,C24,C25,C26
+10000405,,-1,,,8020.0,26.0,6.0,0.0,80.0,,2.0,,,8cf07265,b80912da,e51edcbe,90f40919,25c83c98,6f6d9be8,59434e5e,1f89b562,a73ee510,3b08e48b,a04db730,b57ec450,c66b30f8,07d13a8f,569913cf,11fe787a,e5ba7672,7119e567,1d04f4a4,b1252a9d,d5f54153,,32c7478e,a9d771cd,c9f3bea7,0a47000d
+10001189,,-1,,,17881.0,9.0,8.0,0.0,0.0,,1.0,0.0,,05db9164,bf7a2333,210c632d,3d513154,0942e0a7,,b87f4a4a,0b153874,a73ee510,b8b81ee6,319687c9,8747d4c8,62036f49,07d13a8f,9a0b7e16,d58d490f,e5ba7672,51369abb,,,d4b6b7e8,,32c7478e,37821b83,,
+10000674,0.0,0,2.0,13.0,2904.0,104.0,1.0,3.0,100.0,0.0,1.0,,13.0,1464facd,8947f767,9d56d2c7,68fb546c,43b19349,fbad5c96,d20b4953,1f89b562,a73ee510,fbbf2c95,b5a9f90e,edf66ca8,949ea585,f7c1b33f,7f758956,b78548fb,e5ba7672,bd17c3da,966f1c31,a458ea53,1d1393f4,ad3062eb,32c7478e,3fdb382b,010f6491,49d68486
 ```
 
 **输出**: 下载 CSV 文件，格式如下：
 
 ```csv
-prediction_probability,user_id,age,income,device_type,region,top_3_features,top_3_rules
-0.3214,U1001,25,50000,Android,Asia,age(-0.123); device_type_Android(-0.087); income(+0.045),age <= 30.0000; device_type != 'iOS'
-0.8921,U1002,45,120000,iOS,North America,income(+0.312); device_type_iOS(+0.201); age(+0.089),income > 100000.0000; device_type == 'iOS'; age > 40.0000
+prediction_probability,Id,I1,I2,I3,I4,I5,I6,I7,I8,I9,I10,I11,I12,I13,C1,C2,C3,C4,C5,C6,C7,C8,C9,C10,C11,C12,C13,C14,C15,C16,C17,C18,C19,C20,C21,C22,C23,C24,C25,C26,top_3_features,top_3_rules
+0.7231,10000405,,-1,,,8020.0,26.0,6.0,0.0,80.0,,2.0,,,8cf07265,b80912da,e51edcbe,90f40919,25c83c98,6f6d9be8,59434e5e,1f89b562,a73ee510,3b08e48b,a04db730,b57ec450,c66b30f8,07d13a8f,569913cf,11fe787a,e5ba7672,7119e567,1d04f4a4,b1252a9d,d5f54153,,32c7478e,a9d771cd,c9f3bea7,0a47000d,C17_e5ba7672(+0.525); I11(+0.263); I3(+0.139),I11 > 0.0000; I6 > 7.5000; I7 <= 46.0000
+0.224,10001189,,-1,,,17881.0,9.0,8.0,0.0,0.0,,1.0,0.0,,05db9164,bf7a2333,210c632d,3d513154,0942e0a7,,b87f4a4a,0b153874,a73ee510,b8b81ee6,319687c9,8747d4c8,62036f49,07d13a8f,9a0b7e16,d58d490f,e5ba7672,51369abb,,,d4b6b7e8,,32c7478e,37821b83,,,C17_e5ba7672(+0.331); I5(-0.232); I2(+0.125),I11 > 0.0000; I6 > 7.5000; I7 <= 46.0000
+0.1033,10000674,0.0,0,2.0,13.0,2904.0,104.0,1.0,3.0,100.0,0.0,1.0,,13.0,1464facd,8947f767,9d56d2c7,68fb546c,43b19349,fbad5c96,d20b4953,1f89b562,a73ee510,fbbf2c95,b5a9f90e,edf66ca8,949ea585,f7c1b33f,7f758956,b78548fb,e5ba7672,bd17c3da,966f1c31,a458ea53,1d1393f4,ad3062eb,32c7478e,3fdb382b,010f6491,49d68486,I13(-0.318); C8_1f89b562(+0.152); I4(-0.136),I11 > 0.0000; I6 > 7.5000; I7 <= 46.0000
 ```
 
 ✅ **列顺序设计**：
