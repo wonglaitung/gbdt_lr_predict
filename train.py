@@ -281,14 +281,14 @@ def gbdt_lr_predict(data, category_feature, continuous_feature, test_ids):
 
     # ========== 🆕 Step 1.5: 应用智能特征工程建议 ==========
     # 手动添加多项式特征（根据之前建议）
+    #data['I5_pow3'] = data['I5'] ** 3
     #data['I11_pow3'] = data['I11'] ** 3
+    #data['I13_pow3'] = data['I13'] ** 3
+    #data['I6_pow3'] = data['I6'] ** 3
+    #data['I3_pow3'] = data['I3'] ** 3
+    #data['I8_pow3'] = data['I8'] ** 3
+    #data['I2_pow3'] = data['I2'] ** 3
     #pd.cut(data['I5'], bins=[-np.inf, 140.0, 1020.0, 2960.0, 14410.0, np.inf])
-    #pd.cut(data['I11'], bins=[-np.inf, 0.0, 1.0, 3.0, np.inf])
-    #pd.cut(data['I3'], bins=[-np.inf, 1.0, 3.0, 7.0, 20.0, np.inf])
-    #pd.cut(data['I8'], bins=[-np.inf, 2.0, 7.0, 15.0, 27.0, np.inf])
-    #pd.cut(data['I4'], bins=[-np.inf, 1.0, 7.0, 14.0, np.inf])
-    #pd.cut(data['I2'], bins=[-np.inf, 0, 60, np.inf])
-
 
     train = data[data['Label'] != -1].copy()
     target = train.pop('Label')
