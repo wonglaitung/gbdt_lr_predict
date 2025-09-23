@@ -328,7 +328,7 @@ prediction_probability,Id,I1,I2,I3,I4,I5,I6,I7,I8,I9,I10,I11,I12,I13,C1,C2,C3,C4
     ```
     ✅ 成功后 `output/` 目录生成所有文件，包括 🆕 `feature_engineering_suggestions.csv`。
 
-3.  **启动 API** (待开发):
+3.  **启动 API**:
     ```bash
     python app.py
     ```
