@@ -13,23 +13,34 @@
 ## 📁 项目结构
 
 ```
-gbdt_lr_predict/
+gbdt_lr_system/
+├── assets/
+│   └── 1594867406872.png     # SHAP 可解释性示意图
 ├── config/
 │   └── features.csv          # ✅ 字段定义（业务人员只需改这里！）
 ├── data/
+│   ├── data.csv              # 原始数据（用于训练）
 │   ├── train.csv             # 训练数据
 │   └── test.csv              # 测试数据
 ├── output/                   # 模型目录（训练生成，API/本地脚本依赖）
-│   ├── gbdt_model.pkl        # GBDT 模型
-│   ├── lr_model.pkl          # LR 模型
-│   ├── continuous_features.csv
+│   ├── actual_n_estimators.csv # 🆕 树数量校验
 │   ├── category_features.csv
-│   ├── train_feature_names.csv
-│   └── actual_n_estimators.csv # 🆕 树数量校验
-├── predictor.py              # 🔑 **核心！共享预测逻辑（API + 本地脚本共用）**
-├── train.py                  # 训练脚本
+│   ├── continuous_features.csv
+│   ├── gbdt_feature_importance.csv # 🆕 GBDT 特征重要性
+│   ├── gbdt_model.pkl        # GBDT 模型
+│   ├── lr_leaf_coefficients.csv # 🆕 LR 叶子节点系数
+│   ├── lr_model.pkl          # LR 模型
+│   ├── shap_summary_plot.png # 🆕 SHAP 汇总图
+│   ├── shap_waterfall_sample_0.png # 🆕 SHAP 瀑布图示例
+│   ├── submission_gbdt_lr.csv # 🆕 提交文件示例
+│   └── train_feature_names.csv
 ├── app.py                    # Flask API 服务（调用 predictor.py）
-└── local_batch_predict.py    # 🚀 本地批量预测（调用 predictor.py，无需启动服务）
+├── gbdt_lr.py                # GBDT+LR 核心训练逻辑
+├── local_batch_predict.py    # 🚀 本地批量预测（调用 predictor.py，无需启动服务）
+├── predictor.py              # 🔑 **核心！共享预测逻辑（API + 本地脚本共用）**
+├── README.md
+├── requirements.txt
+└── train.py                  # 训练脚本（调用 gbdt_lr.py）
 ```
 
 > 💡 **关键**：`predictor.py` 封装了**所有重复逻辑**（模型加载、预处理、预测、解释生成），确保 API 与本地脚本行为 100% 一致！
@@ -47,10 +58,10 @@ gbdt_lr_predict/
 **示例**:
 ```csv
 feature_name,feature_type
-age,continuous
-income,continuous
-user_level,category
-device_type,category
+I1,continuous
+I2,continuous
+C1,category
+C2,category
 ```
 
 > 📌 **业务人员友好**：只需提供字段名和类型，无需接触代码！
@@ -89,8 +100,8 @@ python local_batch_predict.py data/test.csv
 
 **输出格式**（与 API 完全一致）：
 ```csv
-prediction_probability,Id,age,income,...,user_level,device_type,...,top_3_features,top_3_rules
-0.8921,1001,35,120000,...,VIP,iOS,...,income(+0.312); device_type_iOS(+0.201),income > 100000.0000; device_type == 'iOS'
+prediction_probability,Id,I1,I2,...,C1,C2,...,top_3_features,top_3_rules
+0.8921,1001,1.0,0,...,"75ac2fe6","1cfdf714",...,I6(+0.312); C1_75ac2fe6(+0.201),I6 > 173.0000; C1 == '75ac2fe6'
 ```
 
 > ✅ **优势**：  
@@ -170,7 +181,7 @@ python app.py  # 默认 http://localhost:5000
 
 ### 📊 `top_3_features` —— **量化贡献**
 - **来源**：SHAP 算法
-- **格式**：`特征名(SHAP值)`，如 `income(+0.312)`
+- **格式**：`特征名(SHAP值)`，如 `I6(+0.312)` 或 `C1_75ac2fe6(+0.201)`
 - **含义**：  
   - `+`：推高预测概率  
   - `-`：拉低预测概率  
@@ -178,7 +189,7 @@ python app.py  # 默认 http://localhost:5000
 
 ### 🧭 `top_3_rules` —— **决策路径**
 - **来源**：GBDT 树结构解析
-- **格式**：人类可读条件，如 `income > 100000.0000`
+- **格式**：人类可读条件，如 `I6 > 173.0000` 或 `C1 == '75ac2fe6'`
 - **含义**：模型实际走的判断路径，可直接作为业务规则
 
 ### 🆚 对比总结
@@ -186,7 +197,7 @@ python app.py  # 默认 http://localhost:5000
 |--------------|--------------------------------|-------------------------------|
 | **本质**     | 特征贡献分数                   | 模型决策路径                  |
 | **使用者**   | 数据科学家（模型优化）         | 业务/风控（规则制定）         |
-| **示例**     | `income(+0.312)`               | `income > 100000.0000`        |
+| **示例**     | `I6(+0.312)`                   | `I6 > 173.0000`               |
 
 > ✅ **两者结合 = 完整解释**：既知“谁贡献大”，又知“模型怎么想”
 
@@ -195,8 +206,8 @@ python app.py  # 默认 http://localhost:5000
 ## 🚀 使用流程
 
 1. **准备数据**  
-   - 放 `train.csv`, `test.csv` 到 `data/`  
-   - 编辑 `config/features.csv`
+   - 放 `data.csv` 到 `data/` 目录（原始数据）
+   - 编辑 `config/features.csv` 定义特征
 
 2. **训练模型**  
    ```bash
@@ -206,12 +217,12 @@ python app.py  # 默认 http://localhost:5000
 3. **选择预测方式**  
    - **离线批量**（推荐）：  
      ```bash
-     python local_batch_predict.py data/to_predict.csv
+     python local_batch_predict.py data/test.csv
      ```
    - **在线 API**：  
      ```bash
      python app.py
-     curl -F "file=@input.csv" http://localhost:5000/predict_batch_csv -o result.csv
+     curl -F "file=@data/test.csv" http://localhost:5000/predict_batch_csv -o result.csv
      ```
 
 ---
