@@ -81,11 +81,15 @@ def get_leaf_path_enhanced(booster, tree_index, leaf_index, feature_names, categ
 # ========== 数据预处理 ==========
 def preProcess():
     path = 'data/'
-    df_train = pd.read_csv(path + 'train.csv')
-    df_test = pd.read_csv(path + 'test.csv')
+    try:
+        df_train = pd.read_csv(path + 'train.csv', encoding='utf-8')
+        df_test = pd.read_csv(path + 'test.csv', encoding='utf-8')
+    except UnicodeDecodeError:
+        print("⚠️ UTF-8 解码失败，尝试使用 GBK 编码...")
+        df_train = pd.read_csv(path + 'train.csv', encoding='gbk')
+        df_test = pd.read_csv(path + 'test.csv', encoding='gbk')
     
     test_ids = df_test['Id'].copy()
-    
     df_train.drop(['Id'], axis=1, inplace=True)
     df_test.drop(['Id'], axis=1, inplace=True)
     
@@ -93,8 +97,7 @@ def preProcess():
     data = pd.concat([df_train, df_test], ignore_index=True)
     data = data.fillna(-1)
     
-    data.to_csv('data/data.csv', index=False)
-    
+    data.to_csv('data/data.csv', index=False, encoding='utf-8')
     return data, test_ids
 
 
