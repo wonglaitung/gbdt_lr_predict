@@ -19,7 +19,13 @@ def main():
         return
 
     try:
-        input_df = pd.read_csv(input_path)
+        # 兼容 UTF-8 和 GBK 编码
+        try:
+            input_df = pd.read_csv(input_path, encoding='utf-8')
+        except UnicodeDecodeError:
+            logger.warning("⚠️ UTF-8 解码失败，尝试使用 GBK 编码...")
+            input_df = pd.read_csv(input_path, encoding='gbk')
+            
         if input_df.empty:
             logger.warning("输入 CSV 为空")
             return
@@ -61,7 +67,7 @@ def main():
 
         # 保存
         output_path = input_path.parent / f"predicted_{input_path.name}"
-        result_df.to_csv(output_path, index=False, encoding='utf-8-sig')
+        result_df.to_csv(output_path, index=False, encoding='utf-8')
         logger.info(f"✅ 结果已保存: {output_path}")
 
     except Exception as e:
