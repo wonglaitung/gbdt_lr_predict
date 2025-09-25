@@ -7,40 +7,41 @@
 > ✅ **双解释输出**：`top_3_features`（量化贡献） + `top_3_rules`（决策路径）  
 > ✅ **业务友好**：批量预测结果保留原始 ID，概率列置顶，Excel 直接打开  
 > ✅ **零重复代码**：核心逻辑抽取至 `predictor.py`，维护成本降低 90%
+> ✅ **增强可解释性**：SHAP 全局特征重要性图 + 单样本瀑布图 + LR 叶子节点系数分析
 
 ---
 
 ## 📁 项目结构
 
 ```
-gbdt_lr_system/
+gbdt_lr_predict/
 ├── assets/
 │   └── 1594867406872.png     # SHAP 可解释性示意图
 ├── config/
 │   └── features.csv          # ✅ 字段定义（业务人员只需改这里！）
 ├── data/
-│   ├── data.csv              # 原始数据（用于训练）
-│   ├── train.csv             # 训练数据
-│   └── test.csv              # 测试数据
+│   ├── data.csv              # 原始数据（用于训练，由 train.py 生成）
+│   ├── train.csv             # 训练数据（含 Label 列）
+│   ├── test.csv              # 测试数据（无 Label 列）
+│   └── predicted_test.csv    # 🆕 本地预测结果示例
 ├── output/                   # 模型目录（训练生成，API/本地脚本依赖）
-│   ├── actual_n_estimators.csv # 🆕 树数量校验
-│   ├── category_features.csv
-│   ├── continuous_features.csv
+│   ├── actual_n_estimators.csv # 🆕 实际训练树数量
+│   ├── category_features.csv   # 类别特征列表
+│   ├── continuous_features.csv # 连续特征列表
 │   ├── gbdt_feature_importance.csv # 🆕 GBDT 特征重要性
-│   ├── gbdt_model.pkl        # GBDT 模型
+│   ├── gbdt_model.pkl          # GBDT 模型
 │   ├── lr_leaf_coefficients.csv # 🆕 LR 叶子节点系数
-│   ├── lr_model.pkl          # LR 模型
-│   ├── shap_summary_plot.png # 🆕 SHAP 汇总图
+│   ├── lr_model.pkl            # LR 模型
+│   ├── shap_summary_plot.png   # 🆕 SHAP 汇总图
 │   ├── shap_waterfall_sample_0.png # 🆕 SHAP 瀑布图示例
-│   ├── submission_gbdt_lr.csv # 🆕 提交文件示例
-│   └── train_feature_names.csv
+│   ├── submission_gbdt_lr.csv  # 🆕 提交文件示例
+│   └── train_feature_names.csv # 训练特征名称列表
 ├── app.py                    # Flask API 服务（调用 predictor.py）
-├── gbdt_lr.py                # GBDT+LR 核心训练逻辑
 ├── local_batch_predict.py    # 🚀 本地批量预测（调用 predictor.py，无需启动服务）
 ├── predictor.py              # 🔑 **核心！共享预测逻辑（API + 本地脚本共用）**
 ├── README.md
 ├── requirements.txt
-└── train.py                  # 训练脚本（调用 gbdt_lr.py）
+└── train.py                  # 训练脚本（包含 GBDT+LR 核心逻辑）
 ```
 
 > 💡 **关键**：`predictor.py` 封装了**所有重复逻辑**（模型加载、预处理、预测、解释生成），确保 API 与本地脚本行为 100% 一致！
@@ -76,11 +77,17 @@ C2,category
 3.  类别特征 → One-Hot 编码
 4.  训练 GBDT → 提取叶子索引 → 训练 LR
 5.  保存模型到 `output/`
-6.  生成可解释性报告（SHAP 图、特征重要性、决策路径）
+6.  生成可解释性报告（SHAP 图、特征重要性、决策路径、LR 叶子系数）
 
 **技术亮点**：
 - **GBDT+LR 架构**：GBDT 捕捉非线性，LR 在叶子上加权 → 高精度 + 强可解释
-- **人类可读规则**：自动将 `device_type_iOS` 还原为 `device_type == 'iOS'`
+- **人类可读规则**：自动将 `C1_75ac2fe6` 还原为 `C1 == '75ac2fe6'`
+- **增强可解释性**：
+  - SHAP 全局特征重要性图 + 单样本瀑布图
+  - GBDT 特征重要性分析
+  - LR 叶子节点系数分析（哪些决策路径最重要）
+  - 决策路径解析（将机器学习模型的决策过程翻译为人类可读规则）
+- **动态树数量**：自动检测实际训练的树数量，确保预测时的一致性
 
 ---
 
@@ -171,9 +178,18 @@ python app.py  # 默认 http://localhost:5000
 - **输入**：上传 CSV 文件
 - **输出**：下载带解释的 CSV（格式同 `local_batch_predict.py`）
 
+#### 🔹 接口 3：健康检查 `/health`
+- **功能**：检查 API 服务状态和模型加载情况
+- **输出**：JSON 格式的健康状态信息，包括：
+  - 服务状态
+  - 模型是否加载成功
+  - 特征统计信息（连续特征数、类别特征数、总特征数）
+  - 实际训练的树数量
+
 > 💡 **关键设计**：  
 > - API 与本地脚本**共用 `predict_core` 逻辑**（来自 `predictor.py`）  
 > - 批量预测**不生成 SHAP 图**（`generate_plot=False`），提升性能
+> - 健康检查接口便于监控服务状态
 
 ---
 
@@ -201,29 +217,44 @@ python app.py  # 默认 http://localhost:5000
 
 > ✅ **两者结合 = 完整解释**：既知“谁贡献大”，又知“模型怎么想”
 
+### 🧠 额外解释信息
+除了 `top_3_features` 和 `top_3_rules`，系统还提供：
+- **SHAP 全局特征重要性图**：显示所有特征对模型预测的整体影响
+- **SHAP 单样本瀑布图**：可视化单个样本的预测过程，展示每个特征的贡献
+- **LR 叶子节点系数**：显示哪些决策路径对最终预测最重要
+- **GBDT 特征重要性**：显示 GBDT 模型中各特征的重要性排序
+
 ---
 
 ## 🚀 使用流程
 
 1. **准备数据**  
-   - 放 `data.csv` 到 `data/` 目录（原始数据）
-   - 编辑 `config/features.csv` 定义特征
+   - 准备训练数据 `train.csv` 和测试数据 `test.csv` 放到 `data/` 目录
+   - 编辑 `config/features.csv` 定义特征类型（continuous/category）
 
 2. **训练模型**  
    ```bash
-   python train.py  # 生成 output/ 目录
+   python train.py  # 生成 output/ 目录和所有模型文件
    ```
 
 3. **选择预测方式**  
    - **离线批量**（推荐）：  
      ```bash
      python local_batch_predict.py data/test.csv
+     # 输出：data/predicted_test.csv
      ```
    - **在线 API**：  
      ```bash
      python app.py
+     # 单样本预测
+     curl -X POST -H "Content-Type: application/json" -d '{"I1": 1.0, "I2": 0, ...}' http://localhost:5000/predict
+     # 批量预测
      curl -F "file=@data/test.csv" http://localhost:5000/predict_batch_csv -o result.csv
      ```
+
+4. **查看结果和解释**  
+   - 预测结果包含概率和双维度解释
+   - 查看 `output/` 目录中的可解释性图表
 
 ---
 
@@ -240,11 +271,16 @@ python app.py  # 默认 http://localhost:5000
 
 - **依赖安装**：
   ```bash
-  pip install flask lightgbm shap matplotlib scikit-learn pandas joblib
+  pip install -r requirements.txt
+  ```
+  或手动安装：
+  ```bash
+  pip install flask==3.1.2 lightgbm==4.6.0 shap==0.48.0 matplotlib==3.10.6 scikit-learn==1.7.2 pandas==2.3.2 numpy==2.2.6 joblib==1.5.2
   ```
 - **特征一致性**：预测时 CSV 列名/类别值必须与训练一致
 - **模型依赖**：`output/` 目录必须包含所有 `.pkl` 和 `.csv` 文件
 - **SHAP 性能**：本地脚本默认生成解释，如需极致性能可关闭（修改 `predict_core` 调用参数）
+- **编码兼容性**：系统自动兼容 UTF-8 和 GBK 编码的 CSV 文件
 
 ---
 
@@ -269,8 +305,15 @@ python app.py  # 默认 http://localhost:5000
 
 > 📘 **附：生产部署建议**  
 > - API 服务：用 `gunicorn` 替代 Flask 内置服务器  
+>   ```bash
+>   gunicorn -w 4 -b 0.0.0.0:5000 app:app
+>   ```
 > - 高频场景：缓存 SHAP 解释结果  
 > - 安全加固：添加 API 认证和限流  
+> - 模型更新：定期重新训练模型并替换 `output/` 目录中的文件  
+> - 监控告警：利用 `/health` 接口设置服务监控  
+> - 日志记录：配置详细的日志记录便于问题排查  
+> - 容器化部署：使用 Docker 封装应用环境，确保部署一致性  
 
 --- 
 
