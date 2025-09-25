@@ -45,7 +45,12 @@ def predict_batch_csv():
             file.save(tmp.name)
             tmp_path = tmp.name
 
-        input_df = pd.read_csv(tmp_path)
+        # 尝试读取 CSV，兼容 UTF-8 和 GBK
+        try:
+            input_df = pd.read_csv(tmp_path, encoding='utf-8')
+        except UnicodeDecodeError:
+            logger.warning("UTF-8 解码失败，尝试使用 GBK 编码...")
+            input_df = pd.read_csv(tmp_path, encoding='gbk')
         os.unlink(tmp_path)
         if input_df.empty:
             return jsonify({"error": "Empty CSV"}), 400
