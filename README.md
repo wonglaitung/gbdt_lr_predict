@@ -22,8 +22,7 @@ gbdt_lr_predict/
 ├── data/
 │   ├── data.csv              # 原始数据（用于训练，由 train.py 生成）
 │   ├── train.csv             # 训练数据（含 Label 列）
-│   ├── test.csv              # 测试数据（无 Label 列）
-│   └── predicted_test.csv    # 🆕 本地预测结果示例
+│   └── test.csv              # 测试数据（无 Label 列）
 ├── output/                   # 模型目录（训练生成，API/本地脚本依赖）
 │   ├── actual_n_estimators.csv # 🆕 实际训练树数量
 │   ├── category_features.csv   # 类别特征列表
@@ -102,7 +101,7 @@ C2,category
 # 预测单个 CSV 文件（结果保存在同目录）
 python local_batch_predict.py data/test.csv
 
-# 输出：data/predicted_test.csv
+# 输出：data/predicted_test.csv（文件名格式为 predicted_{原文件名}.csv）
 ```
 
 **输出格式**（与 API 完全一致）：
@@ -241,7 +240,7 @@ python app.py  # 默认 http://localhost:5000
    - **离线批量**（推荐）：  
      ```bash
      python local_batch_predict.py data/test.csv
-     # 输出：data/predicted_test.csv
+     # 输出：data/predicted_test.csv（文件名格式为 predicted_{原文件名}.csv）
      ```
    - **在线 API**：  
      ```bash
