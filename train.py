@@ -1,3 +1,5 @@
+import os
+os.environ["NUMBA_DISABLE_TBB"] = "1"
 import pandas as pd
 import numpy as np
 import lightgbm as lgb
@@ -7,8 +9,10 @@ from sklearn.metrics import log_loss
 from sklearn.metrics import roc_auc_score, roc_curve
 from lightgbm import log_evaluation
 import matplotlib.pyplot as plt
-import os
 import joblib
+
+plt.rcParams['font.sans-serif'] = ['Microsoft YaHei']  # Windows 微软雅黑
+plt.rcParams['axes.unicode_minus'] = False  # 正常显示负号
 
 # ========== 工具函数：解析叶子节点路径（增强版） ==========
 def get_leaf_path_enhanced(booster, tree_index, leaf_index, feature_names, category_prefixes):
@@ -161,17 +165,59 @@ def gbdt_lr_predict(data, category_feature, continuous_feature, test_ids):
     print(f"✅ 实际训练树数量: {actual_n_estimators} (原计划: {n_estimators})")
 
     # ========== Step 2.5: 输出 GBDT 特征重要性 ==========
+    # 获取 Gain 类型的重要性（更准确反映特征影响）
+    gain_importance = model.booster_.feature_importance(importance_type='gain')
+    # 获取 Split 类型的重要性（特征被用于分裂的次数）
+    split_importance = model.booster_.feature_importance(importance_type='split')
+    
     feat_imp = pd.DataFrame({
         'Feature': x_train.columns,
-        'Importance': model.feature_importances_
-    }).sort_values('Importance', ascending=False)
+        'Gain_Importance': gain_importance,
+        'Split_Importance': split_importance
+    }).sort_values('Gain_Importance', ascending=False)
 
     print("\n" + "="*60)
-    print("📊 GBDT Top 20 重要特征:")
+    print("📊 GBDT Top 20 重要特征 (按 Gain 排序):")
     print("="*60)
     print(feat_imp.head(20))
     feat_imp.to_csv('output/gbdt_feature_importance.csv', index=False)
     print("✅ 已保存至 output/gbdt_feature_importance.csv")
+    
+    # ========== 增加：通过SHAP值分析特征影响方向 ==========
+    try:        
+        import shap
+        
+        print("\n" + "="*60)
+        print("🧠 正在通过SHAP分析特征影响方向...")
+        print("="*60)
+        
+        # 创建SHAP解释器
+        explainer = shap.TreeExplainer(model.booster_)
+        
+        # 为了提高效率，只使用一部分数据计算SHAP值
+        sample_size = min(100, len(x_train))
+        x_train_sample = x_train.iloc[:sample_size]
+        shap_values = explainer.shap_values(x_train_sample)
+        
+        # 计算每个特征的平均SHAP值，用于判断影响方向
+        mean_shap_values = np.mean(shap_values, axis=0)
+        
+        # 将平均SHAP值添加到特征重要性DataFrame中
+        feat_imp['Mean_SHAP_Value'] = mean_shap_values
+        # 根据平均SHAP值判断影响方向：正数为正向影响，负数为负向影响
+        feat_imp['Impact_Direction'] = feat_imp['Mean_SHAP_Value'].apply(lambda x: 'Positive' if x > 0 else 'Negative')
+        
+        # 重新保存包含SHAP信息的特征重要性文件
+        feat_imp.to_csv('output/gbdt_feature_importance.csv', index=False)
+        print("✅ 已更新特征重要性文件，包含SHAP影响方向")
+        
+        # 显示前20个重要特征的SHAP信息（仅显示Feature、Gain_Importance和Impact_Direction）
+        print("\n📊 GBDT Top 20 重要特征 (含SHAP影响方向):")
+        print("="*60)
+        print(feat_imp[['Feature', 'Gain_Importance', 'Impact_Direction']].head(20))
+        
+    except Exception as e:
+        print(f"⚠️ SHAP分析失败: {e}")
 
     # ========== Step 3: 获取叶子节点索引 ==========
     gbdt_feats_train = model.booster_.predict(train.values, pred_leaf=True)
@@ -397,6 +443,12 @@ if __name__ == '__main__':
 
     print("✅ 连续特征:", continuous_feature)
     print("✅ 类别特征:", category_feature)
+
+    print("\n✅ ======================================")
+    print("✅ 将下面的内容复制到大模型内进行解读（不包括此三行）")
+    print("✅ ======================================\n")
+
+    print("针对以下(__)模型训练日志进行业务解读，输出业务规则报告，最大化创造业务价值。")
 
     print("🧠 开始训练 GBDT + LR 模型...")
     predictions = gbdt_lr_predict(data, category_feature, continuous_feature, test_ids)
